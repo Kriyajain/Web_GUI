@@ -2,7 +2,7 @@
   "name": "webgui",
   "version": "1.0.0",
   "description": "Web GUI for user friendly interface with mars rover prototype",
-  "main": "index.js",
+  "main": "app.js",
   "dependencies": {
     "ejs": "^3.1.9",
     "express": "^4.18.2",
@@ -21,7 +21,7 @@
     "type": "git",
     "url": "Web_GUI"
   },
-  "author": "Kriyajain",
+  "author": "Kriya jain",
   "license": "ISC",
   "keywords": [
     "Web",

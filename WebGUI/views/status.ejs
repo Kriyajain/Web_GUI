@@ -7,7 +7,7 @@
   <div>
     <div class="row">
       <div class="col">
-        <h5>Imu</h5>
+        <h5>HMC-Magnetometer</h5>
       </div>
       <div class="col">
         <div class="form-check form-switch" style="padding-left: 90%">
@@ -15,7 +15,7 @@
         </div>
       </div>
     </div>
-    <p style="margin-top: 4%">Orientation: <span id="imuData">0</span></p>
+    <p style="margin-top: 4%">Yaw: <span id="imuData">0</span></p>
   </div>
   <hr style="margin-bottom: 7%" />
   <div>
@@ -40,7 +40,8 @@
   <div>
     <div class="row">
       <div class="col">
-        <h5>Speed</h5>
+        <!-- <h5>Speed</h5> -->
+        <h5>Vector</h5>
       </div>
       <div class="col">
         <div class="form-check form-switch" style="padding-left: 90%">
@@ -49,10 +50,7 @@
       </div>
     </div>
     <p style="margin-top: 4%; margin-bottom: 2%">
-      Linear: <span id="cmdVelX">0.0</span>
-    </p>
-    <p style="margin-top: 0; margin-bottom: 2%">
-      Angular: <span id="cmdVelZ">0.0</span>
+      Vector: <span id="cmdVelV">0.0 + 0.0j</span>
     </p>
   </div>
   <hr style="margin-bottom: 7%" />
@@ -75,12 +73,12 @@
     <p style="margin-bottom: 2%">
       Distance: <span id="goalDistance">0.0</span>
     </p>
-    <p style="margin-bottom: 10%; margin-top: 4%">
+    <!-- <p style="margin-bottom: 10%; margin-top: 4%">
       Current Task : <span class="auto-status-btn-left" id="g2gTask">G2G</span
       ><span class="auto-status-btn-right" id="obaTask"
         >Obstacle Avoidance</span
       >
-    </p>
+    </p> -->
   </div>
   <hr />
 </div>

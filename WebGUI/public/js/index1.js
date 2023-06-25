@@ -6,7 +6,8 @@ var ros;
 var twist;
 var cmdVel;
 var cmdVelAuto;
-
+var angleDegrees;
+var magnitude;
 var lat = [];
 var long = [];
 var yaw = [];
@@ -68,12 +69,12 @@ $("#switchImu").change(function () {
     imuSub = new ROSLIB.Topic({
       ros: ros,
       name: "/hmc",
-      messageType: "geometry_msgs/Twist",
+      messageType: "sensor_msgs/twist",
     });
 
     imuSub.subscribe(function (msg) {
       // yaw = q
-      let yaw = msg.linear.x;
+      yaw = msg.linear.x;
 
       // let angle = Math.atan2(
       //   2.0 * (q.w * q.z + q.x * q.y),
@@ -83,8 +84,8 @@ $("#switchImu").change(function () {
       // if (angle < 0) {
       //   angle += 360;
       // }
-      angle = Math.round(yaw * 100) / 100;
-      $("#imuData").text(angle);
+      // angle = Math.round(angle * 100) / 100;
+      // $("#imuData").text(angle);
     });
   } else {
     imuSub.unsubscribe();
@@ -96,17 +97,17 @@ var gpsSub;
 $("#switchGPS").change(function () {
   let check = $("#switchGPS").prop("checked");
   if (check) {
-    cmdVel = new ROSLIB.Topic({
+    gpsSub = new ROSLIB.Topic({
       ros: ros,
-      name: "/cmd_vel",
-      messageType: "geometry_msgs/Twist",
+      name: "/gps_fix",
+      messageType: "sensor_msgs/NavSatFix",
     });
 
-    cmdVel.subscribe(function (msg) {
-      lat = msg.linear.z;
-      lon = msg.angular.x;
-      $("#gpsLat").text(msg.linear.z);
-      $("#gpsLong").text(msg.angular.x);
+    gpsSub.subscribe(function (msg) {
+      lat = msg.latitude;
+      lon = msg.longitude;
+      $("#gpsLat").text(msg.latitude);
+      $("#gpsLong").text(msg.longitude);
     });
   } else {
     gpsSub.unsubscribe();
@@ -122,30 +123,15 @@ $("#switchAuto").change(function () {
     autoStatusSub = new ROSLIB.Topic({
       ros: ros,
       name: "/gui_msg_topic",
-      messageType: "geometry_msgs/Twist",
-    });
-    cmdVel = new ROSLIB.Topic({
-      ros: ros,
-      name: "/cmd_vel",
-      messageType: "geometry_msgs/Twist",
+      messageType: "custom_msg/gui_msg",
     });
 
-    cmdVel.subscribe(function (msg) {
+    autoStatusSub.subscribe(function (msg) {
       console.log(msg);
-      if (msg.linear.z != 0 && msg.angular.x != 0) {
-        distance =
-          115 *
-          Math.sqrt(
-            Math.pow(msg.linear.z - 21.165000915527344, 2) +
-              Math.pow(msg.angular.x - 72.79, 2)
-          );
-      } else {
-        distance = 0;
-      }
-      $("#goalDistance").text(distance);
-      $("#liveGoal").text("1");
-      $("#gpsX").text(msg.linear.z);
-      $("#gpsY").text(msg.angular.x);
+      $("#goalDistance").text(msg.distance);
+      $("#liveGoal").text(msg.goal_no);
+      $("#gpsX").text(msg.location_x);
+      $("#gpsY").text(msg.location_y);
       if (msg.flag_ob_avoid_or_g2g == 1) {
         $("#g2gTask").addClass("auto-status-btn-active");
         $("#obaTask").removeClass("auto-status-btn-active");
@@ -199,6 +185,16 @@ function initVelocityPublisher() {
   // cmdVel.advertise();
 }
 
+function cartesian2Polar(x, y) {
+  distance = Math.sqrt(x * x + y * y);
+  radians = Math.atan2(y, x);
+  if (radians < 0) {
+    radians = radian + 2 * Math.PI;
+  }
+  polarCoor = { distance: distance, radians: radians };
+  return polarCoor;
+}
+
 function initVelocitySubscriber() {
   cmdVelAuto = new ROSLIB.Topic({
     ros: ros,
@@ -208,12 +204,28 @@ function initVelocitySubscriber() {
   });
 
   cmdVelAuto.subscribe(function (msg) {
+    console.log("hi");
+    twist.linear.x = Math.round(msg.linear.x * 10000) / 10000;
+    twist.linear.y = Math.round(msg.linear.y * 10000) / 10000;
+    angleDegrees = twist.linear.x;
+    magnitude = twist.linear.y;
+
     // if ($("#switchTask").prop("checked")) {
     //   twist.linear.x = Math.round(msg.linear.x * 10000) / 10000;
     //   twist.angular.z = Math.round(msg.angular.z * 10000) / 10000;
     if ($("#switchSpeed").prop("checked")) {
       twist.linear.x = Math.round(msg.linear.x * 10000) / 10000;
+      twist.linear.y = Math.round(msg.linear.y * 10000) / 10000;
       twist.angular.z = Math.round(msg.angular.z * 10000) / 10000;
+
+      x1 = 10 * (twist.linear.x * 0.866 - twist.angular.z * 0.866);
+      y1 = twist.linear.y + twist.linear.x * 0.5 + twist.angular.z * 0.5;
+
+      twist.angular.x = cartesian2Polar(x1, y1).distance;
+      twist.angular.y = cartesian2Polar(x1, y1).radians;
+      const angleDegrees = (twist.angular.y * 180) / Math.PI;
+      const magnitude = twist.angular.x;
+      io.emit("vectorUpdate", { angleDegrees, magnitude });
 
       if (Math.abs(twist.angular.z) == 0) {
         $("#cmdVelV").text(
@@ -378,3 +390,5 @@ $("#autonomousReset").click(function () {
   $("#goalNumber").attr("disabled", false);
   $("#goalNumber").val("");
 });
+
+export { angleDegrees, magnitude };
